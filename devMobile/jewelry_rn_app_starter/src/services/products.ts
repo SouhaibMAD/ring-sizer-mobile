@@ -30,44 +30,67 @@ export interface Product {
 
 import { API_BASE_URL } from '../config/apiConfig';
 
+const API_PORT = 8000;
+
 export async function fetchProducts(): Promise<Product[]> {
-  const res = await fetch(`${API_BASE_URL}/products`);
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-
-  const data: any[] = await res.json();
-
-  // Debug: Log raw API response
-  console.log('📦 Raw API products:', data.length);
-  console.log('📦 First product sample:', JSON.stringify(data[0], null, 2));
+  const url = `${API_BASE_URL}/products`;
+  console.log(`📡 Fetching products from: ${url}`);
   
-  data.forEach((p, index) => {
-    console.log(`  [${index + 1}] ID: ${p.id}, Name: ${p.name}, Type: ${p.type}, Vendor ID: ${p.vendor_id || p.vendor?.id || 'MISSING'}`);
-  });
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
 
-  // On mappe vendor_id → vendorId pour ton front
-  // Handle both formats: direct vendor_id or nested vendor relationship
-  const mapped = data.map((p) => {
-    const vendorId = p.vendor_id || p.vendor?.id || null;
+    console.log(`📡 Response status: ${res.status} ${res.statusText}`);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`❌ API Error: ${res.status} - ${errorText}`);
+      throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
+    }
+
+    const data: any[] = await res.json();
+
+    // Debug: Log raw API response
+    console.log('📦 Raw API products:', data.length);
+    console.log('📦 First product sample:', JSON.stringify(data[0], null, 2));
     
-    return {
-      id: p.id,
-      name: p.name,
-      price: typeof p.price === 'number' ? p.price : Number(p.price) || 0,
-      description: p.description || '',
-      type: p.type,
-      image: p.image,
-      rating: typeof p.rating === 'number' ? p.rating : Number(p.rating) || 0,
-      available: p.available ?? true,
-      vendorId: vendorId,
-    };
-  });
+    data.forEach((p, index) => {
+      console.log(`  [${index + 1}] ID: ${p.id}, Name: ${p.name}, Type: ${p.type}, Vendor ID: ${p.vendor_id || p.vendor?.id || 'MISSING'}`);
+    });
 
-  console.log('✅ Mapped products:', mapped.length);
-  
-  return mapped;
+    // On mappe vendor_id → vendorId pour ton front
+    // Handle both formats: direct vendor_id or nested vendor relationship
+    const mapped = data.map((p) => {
+      const vendorId = p.vendor_id || p.vendor?.id || null;
+      
+      return {
+        id: p.id,
+        name: p.name,
+        price: typeof p.price === 'number' ? p.price : Number(p.price) || 0,
+        description: p.description || '',
+        type: p.type,
+        image: p.image,
+        rating: typeof p.rating === 'number' ? p.rating : Number(p.rating) || 0,
+        available: p.available ?? true,
+        vendorId: vendorId,
+      };
+    });
+
+    console.log('✅ Mapped products:', mapped.length);
+    
+    return mapped;
+  } catch (error: any) {
+    console.error('❌ Network error fetching products:', error);
+    if (error.message?.includes('Network request failed') || error.message?.includes('Failed to fetch')) {
+      throw new Error(`Cannot connect to API at ${url}. Make sure the Laravel server is running on port ${API_PORT} and accessible from your device/emulator.`);
+    }
+    throw error;
+  }
 }
 
 // Interface for API response that includes vendor
