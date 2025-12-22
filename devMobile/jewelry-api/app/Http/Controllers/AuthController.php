@@ -3,17 +3,67 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
+    public function register(Request $request)
+    {
+        $fields = $request->validate([
+            'email'    => 'required|string|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role'     => 'required|in:vendor,admin',
+            'company'  => 'required_if:role,vendor|string|max:255',
+            'siret'    => 'required_if:role,vendor|string|max:20',
+            'phone'    => 'nullable|string|max:20',
+        ]);
+
+        return DB::transaction(function () use ($fields) {
+            $vendorId = null;
+
+            if ($fields['role'] === 'vendor') {
+                $vendor = Vendor::create([
+                    'name'    => $fields['company'],
+                    'email'   => $fields['email'],
+                    'phone'   => $fields['phone'] ?? null,
+                    'company' => $fields['company'],
+                    'siret'   => $fields['siret'],
+                    'active'  => true,
+                ]);
+                $vendorId = $vendor->id;
+            }
+
+            $user = User::create([
+                'name'      => $fields['role'] === 'vendor' ? $fields['company'] : 'Admin',
+                'email'     => $fields['email'],
+                'password'  => Hash::make($fields['password']),
+                'role'      => $fields['role'],
+                'vendor_id' => $vendorId,
+            ]);
+
+            $token = $user->createToken('mobile')->plainTextToken;
+
+            return response()->json([
+                'user' => [
+                    'id'       => $user->id,
+                    'email'    => $user->email,
+                    'role'     => $user->role,
+                    'vendorId' => $user->vendor_id,
+                ],
+                'token' => $token,
+            ], 201);
+        });
+    }
+
     public function login(Request $request)
     {
         $fields = $request->validate([
             'email'    => 'required|email',
             'password' => 'required',
-            'role'     => 'nullable|in:client,vendor,admin', // Optional role selection
+            'role'     => 'nullable|in:vendor,admin',
         ]);
 
         $user = User::where('email', $fields['email'])->first();
@@ -22,7 +72,6 @@ class AuthController extends Controller
             return response()->json(['message' => 'Bad credentials'], 401);
         }
 
-        // Validate role if provided
         if (isset($fields['role']) && $user->role !== $fields['role']) {
             return response()->json([
                 'message' => "You cannot login as {$fields['role']}. Your account role is {$user->role}."

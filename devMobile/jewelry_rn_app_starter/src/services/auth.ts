@@ -1,7 +1,7 @@
 // src/services/auth.ts
 import { api, setAuthToken } from './api';
 
-export type Role = 'client' | 'vendor' | 'admin';
+export type Role = 'vendor' | 'admin';
 
 export interface ApiUser {
   id: number;
@@ -19,8 +19,20 @@ export async function loginApi(email: string, password: string, role?: Role) {
   const { data } = await api.post<LoginResponse>('/login', { 
     email, 
     password,
-    role, // Send role to backend for validation
+    role,
   });
+  setAuthToken(data.token);
+  return data;
+}
+
+export async function registerApi(userData: {
+  email: string;
+  password: string;
+  role: Role;
+  company?: string;
+  siret?: string;
+}) {
+  const { data } = await api.post<LoginResponse>('/register', userData);
   setAuthToken(data.token);
   return data;
 }

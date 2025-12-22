@@ -14,6 +14,8 @@ export interface ApiProduct {
   rating: number;
   available: boolean;
   vendor_id: number;   // vient du backend Laravel
+  weight: number | null;
+  carat: number | null;
 }
 
 export interface Product {
@@ -26,6 +28,8 @@ export interface Product {
   rating: number;
   available: boolean;
   vendorId: number;    // version camelCase pour le front
+  weight: number | null;
+  carat: number | null;
 }
 
 import { API_BASE_URL } from '../config/apiConfig';
@@ -41,14 +45,8 @@ export async function fetchProducts(): Promise<Product[]> {
 
   // Debug: Log raw API response
   console.log('📦 Raw API products:', data.length);
-  console.log('📦 First product sample:', JSON.stringify(data[0], null, 2));
   
-  data.forEach((p, index) => {
-    console.log(`  [${index + 1}] ID: ${p.id}, Name: ${p.name}, Type: ${p.type}, Vendor ID: ${p.vendor_id || p.vendor?.id || 'MISSING'}`);
-  });
-
   // On mappe vendor_id → vendorId pour ton front
-  // Handle both formats: direct vendor_id or nested vendor relationship
   const mapped = data.map((p) => {
     const vendorId = p.vendor_id || p.vendor?.id || null;
     
@@ -62,6 +60,8 @@ export async function fetchProducts(): Promise<Product[]> {
       rating: typeof p.rating === 'number' ? p.rating : Number(p.rating) || 0,
       available: p.available ?? true,
       vendorId: vendorId,
+      weight: p.weight != null ? (typeof p.weight === 'number' ? p.weight : Number(p.weight)) : null,
+      carat: p.carat != null ? (typeof p.carat === 'number' ? p.carat : Number(p.carat)) : null,
     };
   });
 
@@ -82,6 +82,8 @@ export async function fetchMyProducts(): Promise<Product[]> {
     rating: p.rating,
     available: p.available,
     vendorId: p.vendor_id,
+    weight: p.weight,
+    carat: p.carat,
   }));
 }
 
@@ -97,6 +99,8 @@ export async function createProduct(productData: Omit<Product, 'id' | 'vendorId'
     rating: data.rating,
     available: data.available,
     vendorId: data.vendor_id,
+    weight: data.weight,
+    carat: data.carat,
   };
 }
 
@@ -112,6 +116,8 @@ export async function updateProduct(id: number, productData: Partial<Omit<Produc
     rating: data.rating,
     available: data.available,
     vendorId: data.vendor_id,
+    weight: data.weight,
+    carat: data.carat,
   };
 }
 
@@ -169,6 +175,8 @@ export async function fetchProductById(id: string | number): Promise<ProductWith
     rating: typeof data.rating === 'number' ? data.rating : Number(data.rating) || 0,
     available: data.available ?? true,
     vendorId: data.vendor_id,
+    weight: data.weight != null ? (typeof data.weight === 'number' ? data.weight : Number(data.weight)) : null,
+    carat: data.carat != null ? (typeof data.carat === 'number' ? data.carat : Number(data.carat)) : null,
     vendor: data.vendor ? {
       id: data.vendor.id,
       name: data.vendor.name,

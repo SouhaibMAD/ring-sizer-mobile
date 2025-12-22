@@ -21,6 +21,7 @@ Route::get('/ping', function () {
 
 // Auth
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
@@ -31,6 +32,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/products', [ProductController::class, 'store']);
     Route::put('/products/{id}', [ProductController::class, 'update']);
     Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
+    // Vendor Management
+    Route::get('/admin/vendors', [VendorController::class, 'index']);
+    Route::post('/admin/vendors', [VendorController::class, 'store']);
+    Route::put('/admin/vendors/{id}', [VendorController::class, 'update']);
+    Route::delete('/admin/vendors/{id}', [VendorController::class, 'destroy']);
 });
 
 // Public Product routes

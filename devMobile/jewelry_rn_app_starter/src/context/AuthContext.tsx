@@ -7,7 +7,7 @@ import React, {
   ReactNode,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginApi, Role, ApiUser } from '@/services/auth';
+import { loginApi, registerApi, Role, ApiUser } from '@/services/auth';
 import { setAuthToken } from '@/services/api';
 
 export interface User {
@@ -22,6 +22,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string, role?: Role) => Promise<void>;
+  register: (data: { email: string; password: string; role: Role; company?: string; siret?: string }) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -60,15 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string, requestedRole?: Role) => {
     try {
-      // Send requested role to backend for validation
-      // Backend will check if user's actual role matches requested role
       const res = await loginApi(email, password, requestedRole);
       const apiUser: ApiUser = res.user;
 
       const mappedUser: User = {
         id: apiUser.id,
         email: apiUser.email,
-        role: apiUser.role, // Use actual role from backend
+        role: apiUser.role,
         vendorId: apiUser.vendorId != null ? apiUser.vendorId : undefined
       };
 
@@ -80,8 +79,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         AsyncStorage.setItem('auth_user', JSON.stringify(mappedUser)),
       ]);
     } catch (error: any) {
-      // Re-throw the error so AuthScreen can handle it
-      // Axios errors have response.data.message
+      if (error?.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw error;
+    }
+  };
+
+  const register = async (userData: { email: string; password: string; role: Role; company?: string; siret?: string }) => {
+    try {
+      const res = await registerApi(userData);
+      const apiUser: ApiUser = res.user;
+
+      const mappedUser: User = {
+        id: apiUser.id,
+        email: apiUser.email,
+        role: apiUser.role,
+        vendorId: apiUser.vendorId != null ? apiUser.vendorId : undefined
+      };
+
+      setUser(mappedUser);
+      setAuthToken(res.token);
+
+      await Promise.all([
+        AsyncStorage.setItem('auth_token', res.token),
+        AsyncStorage.setItem('auth_user', JSON.stringify(mappedUser)),
+      ]);
+    } catch (error: any) {
       if (error?.response?.data?.message) {
         throw new Error(error.response.data.message);
       }
@@ -96,7 +120,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       AsyncStorage.removeItem('auth_token'),
       AsyncStorage.removeItem('auth_user'),
     ]);
-    // tu pourras plus tard appeler /api/logout côté Laravel
   };
 
   return (
@@ -106,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         loading,
         login,
+        register,
         logout,
       }}
     >

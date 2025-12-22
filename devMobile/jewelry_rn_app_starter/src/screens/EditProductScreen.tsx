@@ -19,6 +19,8 @@ export default function EditProductScreen() {
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [weight, setWeight] = useState('');
+  const [carat, setCarat] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<ProductType>('bague');
   const [image, setImage] = useState('');
@@ -32,6 +34,8 @@ export default function EditProductScreen() {
         const product = await fetchProductById(productId);
         setName(product.name);
         setPrice(product.price.toString());
+        setWeight(product.weight?.toString() || '');
+        setCarat(product.carat?.toString() || '');
         setDescription(product.description);
         setType(product.type);
         setImage(product.image || '');
@@ -52,6 +56,8 @@ export default function EditProductScreen() {
       await updateProduct(productId, {
         name,
         price: parseFloat(price),
+        weight: weight ? parseFloat(weight) : null,
+        carat: carat ? parseFloat(carat) : null,
         description,
         type,
         image,
@@ -76,6 +82,16 @@ export default function EditProductScreen() {
       <Text style={styles.title}>Modifier le produit</Text>
       <Input placeholder="Nom du produit" value={name} onChangeText={setName} />
       <Input placeholder="Prix" value={price} onChangeText={setPrice} keyboardType="numeric" />
+      
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Input placeholder="Poids (g)" value={weight} onChangeText={setWeight} keyboardType="numeric" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Input placeholder="Carat" value={carat} onChangeText={setCarat} keyboardType="numeric" />
+        </View>
+      </View>
+
       <Input placeholder="Description" value={description} onChangeText={setDescription} multiline />
       <Input placeholder="URL de l'image" value={image} onChangeText={setImage} />
 

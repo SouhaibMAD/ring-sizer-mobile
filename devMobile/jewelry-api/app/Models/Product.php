@@ -15,6 +15,8 @@ class Product extends Model
         'rating',
         'available',
         'vendor_id',
+        'weight',
+        'carat',
     ];
 
     public function vendor()

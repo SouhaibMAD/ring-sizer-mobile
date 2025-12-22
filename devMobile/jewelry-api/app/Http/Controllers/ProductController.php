@@ -52,6 +52,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'type' => 'required|in:bague,bracelet,collier,boucles,montre',
             'image' => 'nullable|url',
+            'weight' => 'nullable|numeric|min:0',
+            'carat' => 'nullable|numeric|min:0',
         ]);
 
         $user = Auth::user();
@@ -63,6 +65,8 @@ class ProductController extends Controller
             'description' => $validated['description'],
             'type' => $validated['type'],
             'image' => $validated['image'],
+            'weight' => $validated['weight'] ?? null,
+            'carat' => $validated['carat'] ?? null,
             'available' => $request->input('available', true),
             'vendor_id' => $user->vendor_id,
         ]);
@@ -78,6 +82,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'type' => 'sometimes|in:bague,bracelet,collier,boucles,montre',
             'image' => 'nullable|url',
+            'weight' => 'nullable|numeric|min:0',
+            'carat' => 'nullable|numeric|min:0',
             'available' => 'sometimes|boolean',
         ]);
 

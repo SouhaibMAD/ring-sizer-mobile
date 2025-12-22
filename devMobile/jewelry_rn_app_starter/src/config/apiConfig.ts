@@ -15,12 +15,8 @@
  */
 
 // ⚠️ UPDATE THIS with your computer's local IP address when testing on physical device
-// Example: '192.168.1.100' or '10.0.0.5'
-// Leave as '127.0.0.1' for iOS Simulator/Android Emulator
-// 
-// Your current Wi-Fi IP: 192.168.110.124 (found via ipconfig)
-// To find your IP: Run 'ipconfig' in PowerShell/CMD and look for "Adresse IPv4" under "Wi-Fi"
-const LOCAL_IP = '192.168.1.8'; // Change to '127.0.0.1' for simulator/emulator, or your IP for physical device
+// Your Expo address says 192.168.1.6, so we use that.
+const LOCAL_IP = '192.168.1.6'; 
 
 const API_PORT = 8000;
 

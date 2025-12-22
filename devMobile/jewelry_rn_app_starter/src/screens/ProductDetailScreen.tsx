@@ -1,11 +1,11 @@
 // src/screens/ProductDetailScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, ScrollView, Image, ActivityIndicator, Linking, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { ArrowLeft, Phone, Mail, MapPin, Star } from 'lucide-react-native';
+import { ArrowLeft, Phone, Mail, MapPin, Star, Scale, Gem } from 'lucide-react-native';
 
 import { Card, Button, Text } from '@/components/UI';
 import { fetchProductById, ProductWithVendor } from '@/services/products';
@@ -40,6 +40,23 @@ export default function ProductDetailScreen() {
 
     loadProduct();
   }, [id]);
+
+  const handleContactVendor = () => {
+    if (product?.vendor?.phone) {
+      const phoneNumber = `tel:${product.vendor.phone}`;
+      Linking.canOpenURL(phoneNumber)
+        .then((supported) => {
+          if (!supported) {
+            Alert.alert("Erreur", "L'appel téléphonique n'est pas supporté sur cet appareil.");
+          } else {
+            return Linking.openURL(phoneNumber);
+          }
+        })
+        .catch((err) => console.error('An error occurred', err));
+    } else {
+      Alert.alert("Information", "Le numéro de téléphone du vendeur n'est pas disponible.");
+    }
+  };
 
   if (loading) {
     return (
@@ -167,6 +184,24 @@ export default function ProductDetailScreen() {
               </Text>
             </View>
 
+            {/* Caractéristiques techniques */}
+            {(product.weight || product.carat) && (
+              <View style={{ flexDirection: 'row', gap: 16, marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' }}>
+                {product.weight && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Scale size={16} color="#6b7280" />
+                    <Text style={{ fontSize: 14 }}>{product.weight} g</Text>
+                  </View>
+                )}
+                {product.carat && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Gem size={16} color="#6b7280" />
+                    <Text style={{ fontSize: 14 }}>{product.carat} ct</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
             <View>
               <Text style={{ fontWeight: '700', marginBottom: 4 }}>Description</Text>
               <Text style={{ color: '#6b7280' }}>{product.description}</Text>
@@ -221,9 +256,7 @@ export default function ProductDetailScreen() {
               justifyContent: 'center',
               marginBottom: 16,
             }}
-            onPress={() => {
-              // Plus tard : ouvrir l'app Téléphone / mail
-            }}
+            onPress={handleContactVendor}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Phone size={18} color="#000" />

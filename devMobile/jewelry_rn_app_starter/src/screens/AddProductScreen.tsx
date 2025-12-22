@@ -16,6 +16,8 @@ export default function AddProductScreen() {
   const navigation = useNavigation();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [weight, setWeight] = useState('');
+  const [carat, setCarat] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<ProductType>('bague');
   const [image, setImage] = useState('');
@@ -31,9 +33,13 @@ export default function AddProductScreen() {
       await createProduct({
         name,
         price: parseFloat(price),
+        weight: weight ? parseFloat(weight) : null,
+        carat: carat ? parseFloat(carat) : null,
         description,
         type,
         image,
+        available: true,
+        rating: 0,
       });
       Alert.alert('Succès', 'Produit ajouté !');
       navigation.goBack();
@@ -50,6 +56,16 @@ export default function AddProductScreen() {
       <Text style={{ fontSize: 22, fontWeight: '700', marginBottom: 16 }}>Ajouter un nouveau produit</Text>
       <Input placeholder="Nom du produit" value={name} onChangeText={setName} />
       <Input placeholder="Prix" value={price} onChangeText={setPrice} keyboardType="numeric" />
+      
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Input placeholder="Poids (g)" value={weight} onChangeText={setWeight} keyboardType="numeric" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Input placeholder="Carat" value={carat} onChangeText={setCarat} keyboardType="numeric" />
+        </View>
+      </View>
+
       <Input placeholder="Description" value={description} onChangeText={setDescription} multiline />
       <Input placeholder="URL de l'image" value={image} onChangeText={setImage} />
 
